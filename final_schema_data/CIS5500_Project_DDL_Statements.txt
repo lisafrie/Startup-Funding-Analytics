@@ -1,0 +1,47 @@
+
+CREATE TABLE Financial_Entity (
+    ID INT,
+    name VARCHAR(255) NOT NULL,
+    categories VARCHAR(255),
+    market VARCHAR(255),
+    country VARCHAR(255),
+    state VARCHAR(255),
+    city VARCHAR(255),
+    is_a VARCHAR(255),
+    PRIMARY KEY (ID)
+)
+
+CREATE TABLE Company (
+    company_ID INT,
+    founding_date DATETIME,
+    homepage_URL VARCHAR(255),
+    status ENUM ('operating', 'closed', 'acquired', 'unknown')
+    FOREIGN KEY (company_ID) REFERENCES Financial_Entity(ID)
+)
+
+CREATE TABLE Investor (
+    investor_ID INT,
+    is_person BOOLEAN,
+    FOREIGN KEY (investor_ID) REFERENCES Financial_Entity(ID)
+)
+
+CREATE TABLE Round (
+    company_ID INT,
+    investor_ID INT,
+    round_number INT,
+    round_type VARCHAR(255),
+    amount_USD INT,
+    date DATETIME,
+    FOREIGN KEY (company_ID) REFERENCES Company (company_ID),
+    FOREIGN KEY (investor_ID) REFERENCES Investor(investor_ID)
+)
+
+CREATE TABLE Acquisition (
+    acquirer_ID INT,
+    acquired_ID INT,
+    date DATETIME,
+    price INT,
+    FOREIGN KEY (acquirer_ID) REFERENCES Financial_Entity(ID),
+    FOREIGN KEY (acquired_ID) REFERENCES Financial_Entity(ID)
+
+)
