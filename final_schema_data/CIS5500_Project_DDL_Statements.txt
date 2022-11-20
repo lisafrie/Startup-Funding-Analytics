@@ -1,47 +1,129 @@
 
+CREATE DATABASE PROJECT;
+
+USE PROJECT;
+
+# Creation of tables for the Database
+
 CREATE TABLE Financial_Entity (
     ID INT,
     name VARCHAR(255) NOT NULL,
-    categories VARCHAR(255),
+    categories VARCHAR(500),
     market VARCHAR(255),
     country VARCHAR(255),
     state VARCHAR(255),
     city VARCHAR(255),
     is_a VARCHAR(255),
     PRIMARY KEY (ID)
-)
+);
+
 
 CREATE TABLE Company (
     company_ID INT,
-    founding_date DATETIME,
+    founding_date DATE,
     homepage_URL VARCHAR(255),
-    status ENUM ('operating', 'closed', 'acquired', 'unknown')
+    status ENUM ('operating', 'closed', 'acquired', 'unknown'),
+    PRIMARY KEY (company_ID),
     FOREIGN KEY (company_ID) REFERENCES Financial_Entity(ID)
-)
+);
+
 
 CREATE TABLE Investor (
     investor_ID INT,
-    is_person BOOLEAN,
+    is_person VARCHAR(255),
+    PRIMARY KEY (investor_ID),
     FOREIGN KEY (investor_ID) REFERENCES Financial_Entity(ID)
-)
+);
+
 
 CREATE TABLE Round (
     company_ID INT,
     investor_ID INT,
     round_number INT,
     round_type VARCHAR(255),
-    amount_USD INT,
-    date DATETIME,
+    amount_USD DOUBLE,
+    date DATE,
+    PRIMARY KEY (company_ID, investor_ID, round_number),
     FOREIGN KEY (company_ID) REFERENCES Company (company_ID),
     FOREIGN KEY (investor_ID) REFERENCES Investor(investor_ID)
-)
+);
+
 
 CREATE TABLE Acquisition (
     acquirer_ID INT,
     acquired_ID INT,
-    date DATETIME,
-    price INT,
+    date DATE,
+    price DOUBLE,
+    currency VARCHAR(255),
     FOREIGN KEY (acquirer_ID) REFERENCES Financial_Entity(ID),
     FOREIGN KEY (acquired_ID) REFERENCES Financial_Entity(ID)
 
-)
+);
+
+
+#Inserting data into the tables using the following
+
+#For Financial Entity
+LOAD DATA LOCAL INFILE 'filepath/Financial_Entity_Schema.csv' INTO TABLE Financial_Entity
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(ID, name, @vthree, @vfour, @vfive, @vsix, @vseven, is_a)
+SET
+categories = NULLIF(@vthree,''),
+market = NULLIF(@vfour,''),
+country = NULLIF(@vfive,''),
+state = NULLIF(@vsix,''),
+city = NULLIF(@vseven,'');
+
+
+#For Company
+LOAD DATA LOCAL INFILE 'filepath/Company_Schema.csv' INTO TABLE Company
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(company_ID, @vtwo, @vthree, status)
+SET
+founding_date = NULLIF(@vtwo,''),
+homepage_URL = NULLIF(@vthree,'');
+
+
+#For Investor
+LOAD DATA LOCAL INFILE 'filepath/Investor_Schema.csv' INTO TABLE Investor
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(investor_ID, @vtwo)
+SET
+is_person = NULLIF(@vtwo,'');
+
+
+#For Round
+LOAD DATA LOCAL INFILE 'filepath/Round_Schema.csv' INTO TABLE Round
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(company_ID, investor_ID, round_number, round_type, @vfive, @vsix)
+SET
+amount_USD = NULLIF(@vfive,''),
+date = NULLIF(@vsix,'');
+
+
+#For Acquisition
+LOAD DATA LOCAL INFILE 'filepath/Acquisition_Schema.csv' INTO TABLE Acquisition
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(acquirer_ID, acquired_ID, @vthree, @vfour, @vfive)
+SET
+date = NULLIF(@vthree,''),
+price = NULLIF(@vfour,''),
+currency = NULLIF(@vfive,'');
+
+
+
