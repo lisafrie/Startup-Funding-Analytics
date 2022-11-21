@@ -1,0 +1,119 @@
+# Queries
+
+# (1) Display tabular company information on the company tab.
+SELECT name, categories, market, country, state, city, founding_date, homepage_URL, status
+FROM Financial_Entity f JOIN Company c
+ON f.ID = c.company_ID
+ORDER BY name
+LIMIT 20;
+
+# (2) Display tabular investment information.
+SELECT name, categories, market, country, state, city
+FROM Financial_Entity f JOIN Investor i
+ON f.ID = i.investor_ID
+ORDER BY name
+LIMIT 20;
+
+# (3) Display tabular acquisition information.
+SELECT price, currency, f1.name AS acquired_name, f.name AS acquirer_name, f1.market AS acquired_market, f.market AS acquirer_market
+FROM Financial_Entity f JOIN Acquisition a ON f.ID = a.acquirer_ID
+    JOIN Financial_Entity f1 ON f1.ID = a.acquired_ID
+ORDER BY price DESC
+LIMIT 20;
+
+# (4) Display tabular round information.
+SELECT amount_USD, round_type, date, f.name AS company, f1.name AS investor, f.market AS company_market, f1.market AS investor_market
+FROM Financial_Entity f
+    JOIN Round r ON f.ID = r.company_ID
+    JOIN Financial_Entity f1 ON f1.ID = r.investor_ID
+ORDER BY amount_USD DESC
+LIMIT 20;
+
+# (5) How has funding for software companies changed over time?
+SELECT YEAR(date) AS year, SUM(amount_USD) AS total_funding, AVG(amount_USD) AS avg_investment
+FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID
+WHERE f.market LIKE "%Software%"
+GROUP BY YEAR(date)
+ORDER BY YEAR(date) DESC
+
+# (6) Which countries have the most biotechnology companies?
+SELECT Country, COUNT(*) AS n_biotech_companies
+FROM Financial_Entity
+WHERE is_a = "company" AND market LIKE "%Biotechnology%" AND country IS NOT NULL
+GROUP BY country
+ORDER BY COUNT(*) DESC
+
+# (7) Which U.S. states are losing/gaining the most (net) investment funding?
+SELECT f.state,
+       IFNULL(SUM(r.amount_USD),0) - IFNULL(SUM(r1.amount_USD),0) AS net_funding,
+       IFNULL(SUM(r.amount_USD),0) AS funding_in,
+       IFNULL(SUM(r1.amount_USD),0) AS funding_out
+FROM Financial_Entity f
+    JOIN Round r ON f.ID = r.company_ID
+    JOIN Round r1 ON f.ID = r1.investor_ID
+WHERE state IS NOT NULL
+GROUP BY f.state
+ORDER BY IFNULL(SUM(r.amount_USD),0) - IFNULL(SUM(r1.amount_USD),0) DESC;
+
+# (8) Which companies have been acquired four times?
+WITH CompanyName AS (
+    SELECT id, name
+    FROM Financial_Entity
+)
+SELECT c1.name AS compnay1, date1,
+    c2.name AS company2, date2,
+    c3.name AS company3, date3,
+    c4.name AS company4, date4,
+    c5.name AS company5
+FROM (
+    SELECT a1.*, a.date AS date4, a.acquirer_id AS id5
+    FROM Acquisition a JOIN
+        (SELECT a1.*, a.date AS date3, a.acquirer_id AS id4
+          FROM Acquisition a JOIN
+              (SELECT a.acquired_id AS id1, a.date AS date1, a.acquirer_id AS id2, a1.date AS date2, a1.acquirer_id AS id3
+               FROM Acquisition a
+               JOIN Acquisition a1 ON a.acquirer_id = a1.acquired_id
+               WHERE a1.date > a.date) a1
+            ON a.acquired_id = a1.id3
+            WHERE a.date > a1.date2) a1
+    ON a.acquired_id = a1.id4
+    WHERE a.date > a1.date3) a1
+    JOIN CompanyName c1 on c1.id = a1.id1
+    LEFT JOIN CompanyName c2 on c2.id = a1.id2
+    LEFT JOIN CompanyName c3 on c3.id = a1.id3
+    LEFT JOIN CompanyName c4 on c4.id = a1.id4
+    LEFT JOIN CompanyName c5 on c5.id = a1.id5;
+
+# (9) Which investors have invested in seed, angel, venture, and debt_financing rounds?
+WITH OrderedRounds AS (
+    SELECT investor_id, round_type
+    FROM Round
+    ORDER BY round_type
+)
+SELECT id,
+       name AS investor_name, GROUP_CONCAT(DISTINCT round_type SEPARATOR ", ") AS round_types
+FROM Financial_Entity f JOIN OrderedRounds r
+ON f.id = r.investor_id
+GROUP BY id, name
+HAVING GROUP_CONCAT(DISTINCT round_type) LIKE "%angel%debt_financing%seed%venture%";
+
+# (10) Which rounds types attract the highest percentage of international investors?
+WITH CleanedRound AS (
+    SELECT company_ID, investor_ID, round_type
+    FROM Round
+),  CleanedCompany AS (
+    SELECT id, country AS company_country
+    FROM Financial_Entity
+    WHERE is_a = "company" AND country IS NOT NULL
+), CleanedInvestor AS (
+    SELECT id, country AS investor_country
+    FROM Financial_Entity
+    WHERE is_a = "investor" AND country IS NOT NULL
+)
+SELECT round_type,
+       SUM(IF(company_country != investor_country,1,0)) / COUNT(*) * 100 AS percentage_international
+FROM CleanedRound r
+    JOIN CleanedCompany c ON r.company_id = c.id
+    JOIN CleanedInvestor i ON r.investor_id = i.id
+GROUP BY round_type
+ORDER BY SUM(IF(company_country != investor_country,1,0)) / COUNT(*) DESC
