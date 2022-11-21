@@ -117,3 +117,21 @@ FROM CleanedRound r
     JOIN CleanedInvestor i ON r.investor_id = i.id
 GROUP BY round_type
 ORDER BY SUM(IF(company_country != investor_country,1,0)) / COUNT(*) DESC
+
+
+# Credentials:
+
+Our database was created using AWS. We have used the AWS student account to do so. The database uses MYSQL for querying.
+
+The instructions and settings used to create the database were from the handout given to us for homework and exercises. Since this database is created with AWS student, it is stopped temporarily when the session is closed. Therefore, the session has to be on to be able to access and use this database for querying.
+
+Here are the login details for the database:
+
+Host: [cis5500project.cdz0fraetoci.us-east-1.rds.amazonaws.com](http://cis5500project.cdz0fraetoci.us-east-1.rds.amazonaws.com)
+
+Username: finalprojectteam
+
+Password: PasswordForCIS5500Project
+
+Port: 3306
+
