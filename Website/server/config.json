@@ -1,0 +1,9 @@
+{
+    "rds_host": "cis5500project.cdz0fraetoci.us-east-1.rds.amazonaws.com",
+    "rds_port": "3306",
+    "rds_user": "finalprojectteam",
+    "rds_password" : "PasswordForCIS5500Project",
+    "rds_db": "PROJECT",
+    "server_host": "127.0.0.1",
+    "server_port":"8080"
+}
