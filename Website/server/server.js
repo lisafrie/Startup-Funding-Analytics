@@ -11,11 +11,38 @@ const app = express();
 // whitelist localhost 3000
 app.use(cors({ credentials: true, origin: ['http://localhost:3000'] }));
 
-// Route 1 - register as GET 
+// Route 0 - register as GET 
 app.get('/', routes.home)
 
-// Route 2
-app.get('/company', routes.company)
+// Route 1 - register as GET
+app.get('/timeseries_funding', routes.timeseries_funding)
+
+// Route 2 - register as GET
+app.get('/timeseries_count_funding', routes.timeseries_count_funding)
+
+// Route 3 - register as GET
+app.get('/timeseries_founding_dates', routes.timeseries_founding_dates)
+
+// Route 4 - register as GET
+app.get('/market_funding_share', routes.market_funding_share)
+
+// Route 5 - register as GET
+app.get('/international_funding', routes.international_funding)
+
+// Route 6 - register as GET
+app.get('/populate_us_heatmap', routes.populate_us_heatmap)
+
+// // Route 7 - register as GET
+// app.get('/search_companies', routes.search_companies)
+// 
+// // Route 8 - register as GET
+// app.get('/company', routes.company)
+// 
+// // Route 9 - register as GET
+// app.get('/search_investors', routes.company_investors)
+// 
+// // Route 10 - register as GET
+// app.get('/investor', routes.company)
 
 
 app.listen(config.server_port, () => {
