@@ -32,17 +32,26 @@ app.get('/international_funding', routes.international_funding)
 // Route 6 - register as GET
 app.get('/populate_us_heatmap', routes.populate_us_heatmap)
 
-// // Route 7 - register as GET
-// app.get('/search_companies', routes.search_companies)
-// 
-// // Route 8 - register as GET
-// app.get('/company', routes.company)
-// 
-// // Route 9 - register as GET
-// app.get('/search_investors', routes.company_investors)
-// 
-// // Route 10 - register as GET
-// app.get('/investor', routes.company)
+// Route 7 - register as GET
+app.get('/search_companies', routes.search_companies)
+ 
+// Route 8 - register as GET
+app.get('/company', routes.company)
+ 
+// Route 9 - register as GET
+app.get('/company_rounds', routes.company_rounds)
+
+// Route 10 - register as GET
+app.get('/company_investors', routes.company_investors)
+
+// Route 11 - register as GET
+app.get('/search_investors', routes.search_investors)
+
+// Route 12 - register as GET
+app.get('/investor', routes.investor)
+
+// Route 13 - register as GET
+app.get('/investor_companies', routes.investor_companies)
 
 
 app.listen(config.server_port, () => {

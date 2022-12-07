@@ -504,7 +504,7 @@ async function investor(req, res) {
 }
 
 // Route 13 (handler)
-async function investor_copmanies(req, res) {
+async function investor_companies(req, res) {
 	const id = req.query.id
 
 	connection.query(`SELECT o.investor_ID, o.investor_name, o.company_ID, o.investment_name, r1.investor_ID AS coinvestor_ID, f2.name AS coinvestor_name
