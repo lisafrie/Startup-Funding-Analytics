@@ -60,7 +60,7 @@ WITH CompanyName AS (
     SELECT id, name
     FROM Financial_Entity
 )
-SELECT c1.name AS compnay1, date1,
+SELECT c1.name AS company1, date1,
     c2.name AS company2, date2,
     c3.name AS company3, date3,
     c4.name AS company4, date4,

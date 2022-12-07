@@ -47,7 +47,7 @@ async function timeseries_funding(req, res) {
     if (req.query.market) {market = req.query.market}
     
     connection.query(`SELECT YEAR(date) AS year, SUM(amount_USD) AS total_funding
-    FROM Financial_Entity f JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) AS r ON f.ID = r.company_ID
+    FROM Financial_Entity f JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
     WHERE f.market LIKE "%${market}%" AND amount_USD IS NOT NULL
     GROUP BY YEAR(date)
     ORDER BY YEAR(date) DESC`, function (error, results, fields) {
@@ -68,7 +68,7 @@ async function timeseries_count_funding(req, res) {
     market = ""
     if (req.query.market) {market = req.query.market}
     
-    connection.query(`SELECT YEAR(date) AS year, COUNT(DISTINCT ID) AS funded_count
+    connection.query(`SELECT YEAR(date) AS year, COUNT(DISTINCT ID, round_number) AS funded_count
     FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID
     WHERE f.market LIKE "%${market}%"
     GROUP BY YEAR(date)
@@ -115,7 +115,7 @@ async function market_funding_share(req, res) {
     connection.query(`
       
     SELECT market, SUM(amount_USD) AS total_funding
-    FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID
+    FROM Financial_Entity f JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
     WHERE amount_USD IS NOT NULL AND YEAR(date) = ${year}
     GROUP BY market
     ORDER BY total_funding DESC
@@ -135,7 +135,7 @@ async function market_funding_share(req, res) {
     connection.query(`
       
     SELECT market, SUM(amount_USD) AS total_funding
-    FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID
+    FROM Financial_Entity f JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
     WHERE amount_USD IS NOT NULL
     GROUP BY market
     ORDER BY total_funding DESC
@@ -226,6 +226,10 @@ async function international_funding(req, res) {
     })};
 }
 
+// ********************************************
+//            DASHBOARD ROUTES
+// ********************************************
+
 // Route 6 (handler)
 async function populate_us_heatmap(req, res) {
   
@@ -298,6 +302,10 @@ async function populate_us_heatmap(req, res) {
     })};
 }
 
+// ********************************************
+//            COMPANY ROUTES
+// ********************************************
+
 // Route 7 (handler)
 async function search_companies(req, res) {
 	const name = req.query.name ? req.query.name : ''
@@ -317,26 +325,202 @@ async function search_companies(req, res) {
 
 
 	if (req.query.page && !isNan(req.query.page)) {
-	  connection.query(`SELECT name, market, country, state, city, founding_date, homepage_URL, status
-		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID
+	  connection.query(`SELECT f.ID, f.name, f.market, f.country, f.state, f.city, c.founding_date, c.status, SUM(amount_USD) AS total_funding
+		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
 		WHERE name LIKE '%${name}%' AND
 			market LIKE '%${market}%' AND
 			country LIKE '%${country}%' AND
 			state LIKE '%${state}%' AND
-			city LIKE '%${city}%'
+			city LIKE '%${city}%' AND
+			total_funding >= ${total_fundingLow} AND total_funding <= ${total_fundingHigh}
+		GROUP BY ID, name, market, country, state, city, founding_date, status
 		ORDER BY name
 		LIMIT ${start}, ${pagesize}`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
 		res.json({error: error})
-	    { else if (results) {
+	    } else if (results) {
 		res.json({results: results})
 	    }
 	  });
 	} else {
+	  connection.query(`SELECT f.ID, f.name, f.market, f.country, f.state, f.city, c.founding_date, c.status, SUM(amount_USD) AS total_funding
+		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
+		WHERE name LIKE '%${name}%' AND
+			market LIKE '%${market}%' AND
+			country LIKE '%${country}%' AND
+			state LIKE '%${state}%' AND
+			city LIKE '%${city}%' AND
+			total_funding >= ${total_fundingLow} AND total_funding <= ${total_fundingHigh}
+		GROUP BY ID, name, market, country, state, city, founding_date, status
+		ORDER BY name`, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    } else if (results) {
+		res.json({results: results})
+	    }
+	  });
+	}
+} 
+
+// Route 8 (handler)
+async function company(req, res) {
+	const id = req.query.id
+
+	connection.query(`SELECT ID, name, founding_date, homepage_URL, f.market AS company_market, SUM(amount_USD) AS total_funding
+		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
+		WHERE ID = ${id} 
+		GROUP BY ID`, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    } else if (results) {
+		res.json({results: results})
+	    }
+	});
 }
 
+// Route 9 (handler)
+async function company_rounds(req, res) {
+	const id = req.query.id
+
+	connection.query(`SELECT DISTINCT ID, f.name AS company, round_number, round_type, r.date AS funding_date, amount_USD, a.date AS acquisition_date, a.price, a.currency
+		FROM Financial_Entity f LEFT JOIN Round r ON f.ID = r.company_ID LEFT JOIN Acquisition a ON f.ID = a.acquired_ID
+		WHERE ID = ${id}
+		ORDER BY date DESC`, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    } else if (results) {
+		res.json({results: results})
+	    }
+	});
+}
+
+// Route 10 (handler)
+async function company_investors(req, res) {
+	const id = req.query.id
+
+	connection.query(`SELECT ID, investor_ID, f1.name AS investor, round_number, round_type, f1.market AS investor_market, acquirer_ID, f2.name AS acquirer, f2.market AS acquirer_market
+		FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID JOIN Financial_Entity f1 ON f1.ID = r.investor_ID
+			LEFT JOIN Acquisition a ON f.ID = a.acquired_ID JOIN Financial_Entity f2 ON f2.ID = a.aquirer_ID
+		WHERE ID = ${id}
+		GROUP BY ID	
+		ORDER BY date DESC`, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    } else if (results) {
+		res.json({results: results})
+	    }
+	});
+}
+
+// ********************************************
+//            INVESTOR ROUTES
+// ********************************************
+
+// Route 11 (handler)
+async function search_investors(req, res) {
+	const name = req.query.name ? req.query.name : ''
+	const market = req.query.market ? req.query.market : ''
+	const country = req.query.country ? req.query.country : ''
+	const state = req.query.state ? req.query.state : ''
+	const city = req.query.city ? req.query.city : ''
+	const is_person = req.query.is_person ? req.query.is_person : ''
+	
+	const num_investmentsLow = req.query.investmentsLow ? req.query.investmentsLow : 0
+	const num_investmentsHigh = req.query.investmentsHigh ? req.query.investmentsHigh : 100
+	const num_acquisitionsLow = req.query.acquisitionsLow ? req.query.acquisitionsLow : 0
+	const num_acquisitionsHigh = req.query.acquisitionsHigh ? req.query.acquisitionsHigh : 100
+
+	const page = req.query.page
+	const pagesize = req.query.pagesize ? req.query.pagesize : 10
+	const start = page * pagesize - pagesize
+
+
+	if (req.query.page && !isNan(req.query.page)) {
+	  connection.query(`SELECT f.ID, f.name, f.market, f.country, f.state, f.city, i.is_person, num_investments, num_acquisitions
+		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID JOIN (SELECT investor_ID, COUNT(*) AS num_investments FROM Round GROUP BY investor_ID) r ON i.investor_ID = r.investor_ID
+			LEFT JOIN (SELECT acquirer_ID, COUNT(*) AS num_acquisitions FROM Acquisition GROUP BY acquirer_ID) a ON f.ID = a.acquirer_ID
+		WHERE name LIKE '%${name}%' AND
+			market LIKE '%${market}%' AND
+			country LIKE '%${country}%' AND
+			state LIKE '%${state}%' AND
+			city LIKE '%${city}%' AND
+			is_person LIKE '%${is_person}%' AND
+			num_investments >= ${num_investmentsLow} AND num_investments <= ${num_investmentsHigh} AND
+			num_acquisitions >= ${num_acquisitionsLow} AND num_acquisitions <= ${num_acquisitionsHigh} AND
+			(num_investments > 0 OR num_acquistions > 0)
+		ORDER BY name
+		LIMIT ${start}, ${pagesize}`, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    } else if (results) {
+		res.json({results: results})
+	    }
+	  });
+	} else {
+	  connection.query(`SELECT f.ID, f.name, f.market, f.country, f.state, f.city, i.is_person, num_investments, num_acquisitions
+		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID JOIN (SELECT investor_ID, COUNT(*) AS num_investments FROM Round GROUP BY investor_ID) r ON i.investor_ID = r.investor_ID
+			LEFT JOIN (SELECT acquirer_ID, COUNT(*) AS num_acquisitions FROM Acquisition GROUP BY acquirer_ID) a ON f.ID = a.acquirer_ID
+		WHERE name LIKE '%${name}%' AND
+			market LIKE '%${market}%' AND
+			country LIKE '%${country}%' AND
+			state LIKE '%${state}%' AND
+			city LIKE '%${city}%' AND
+			is_person LIKE '%${is_person}%' AND
+			num_investments >= ${num_investmentsLow} AND num_investments <= ${num_investmentsHigh} AND
+			num_acquisitions >= ${num_acquisitionsLow} AND num_acquisitions <= ${num_acquisitionsHigh} AND
+			(num_investments > 0 OR num_acquistions > 0)
+		ORDER BY name`, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    } else if (results) {
+		res.json({results: results})
+	    }
+	  });
+	}
 } 
+
+// Route 12 (handler)
+async function investor(req, res) {
+	const id = req.query.id
+
+	connection.query(`SELECT f.ID, f.name, i.is_person, r.market AS investment_market, num_investments, a.market AS acquisition_market, num_acquisitions
+		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID JOIN (SELECT investor_ID, market, COUNT(*) AS num_investments FROM Round r1 JOIN Financial_Entity f2 ON r1.company_ID = f2.ID GROUP BY investor_ID, market) r ON i.investor_ID = r.investor_ID
+			LEFT JOIN (SELECT acquirer_ID, market COUNT(*) AS num_acquisitions FROM Acquisition a1 JOIN Financial_Entity f1 ON a1.acquired_ID = f1.ID GROUP BY acquirer_ID, market) a ON f.ID = a.acquirer_ID
+		WHERE ID = ${id}`, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    } else if (results) {
+		res.json({results: results})
+	    }
+	});
+}
+
+// Route 13 (handler)
+async function investor_copmanies(req, res) {
+	const id = req.query.id
+
+	connection.query(`SELECT o.investor_ID, o.investor_name, o.company_ID, o.investment_name, r1.investor_ID AS coinvestor_ID, f2.name AS coinvestor_name
+		FROM (SELECT r.investor_ID, f.name AS investor_name, r.company_ID, f1.name AS investment_name
+			FROM Financial_Entity f JOIN Round r ON r.investor_ID = f.ID JOIN Financial_Entity f1 ON f1.ID = r.company_ID
+			WHERE ID = ${id}) o LEFT JOIN ROUND r1 ON r1.company_ID = o.company_ID JOIN Financial_Entity f2 ON f2.ID = r1.investor_ID
+		, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    } else if (results) {
+		res.json({results: results})
+	    }
+	});
+}
+
 
 module.exports = {
     home,
