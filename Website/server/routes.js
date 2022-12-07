@@ -35,6 +35,10 @@ async function home(req, res) {
     });
 }
 
+// ********************************************
+//            HOMEPAGE ROUTES
+// ********************************************
+
 // Route 1 (handler)
 async function timeseries_funding(req, res) {
     // Returns total funding by year, filtered by market
@@ -43,7 +47,7 @@ async function timeseries_funding(req, res) {
     if (req.query.market) {market = req.query.market}
     
     connection.query(`SELECT YEAR(date) AS year, SUM(amount_USD) AS total_funding
-    FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID
+    FROM Financial_Entity f JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) AS r ON f.ID = r.company_ID
     WHERE f.market LIKE "%${market}%" AND amount_USD IS NOT NULL
     GROUP BY YEAR(date)
     ORDER BY YEAR(date) DESC`, function (error, results, fields) {
@@ -294,10 +298,45 @@ async function populate_us_heatmap(req, res) {
     })};
 }
 
-// Route x (handler)
-async function company(req, res) {
-    res.json({"name": "Test"})
+// Route 7 (handler)
+async function search_companies(req, res) {
+	const name = req.query.name ? req.query.name : ''
+	const market = req.query.market ? req.query.market : ''
+	const country = req.query.country ? req.query.country : ''
+	const state = req.query.state ? req.query.state : ''
+	const city = req.query.city ? req.query.city : ''
+	
+	const total_fundingLow = req.query.fundingLow ? req.query.fundingLow : 0
+	const total_fundingHigh = req.query.fundingHigh ? req.query.fundingHigh : 10000000
+	const num_acquisitionsLow = req.query.acquisitionsLow ? req.query.acquisitionsLow : 0
+	const num_acquisitionsHigh = req.query.acquisitionsHigh ? req.query.acquisitionsHigh : 10
+
+	const page = req.query.page
+	const pagesize = req.query.pagesize ? req.query.pagesize : 10
+	const start = page * pagesize - pagesize
+
+
+	if (req.query.page && !isNan(req.query.page)) {
+	  connection.query(`SELECT name, market, country, state, city, founding_date, homepage_URL, status
+		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID
+		WHERE name LIKE '%${name}%' AND
+			market LIKE '%${market}%' AND
+			country LIKE '%${country}%' AND
+			state LIKE '%${state}%' AND
+			city LIKE '%${city}%'
+		ORDER BY name
+		LIMIT ${start}, ${pagesize}`, function (error, results, fields) {
+	    if (error) {
+		console.log(error)
+		res.json({error: error})
+	    { else if (results) {
+		res.json({results: results})
+	    }
+	  });
+	} else {
 }
+
+} 
 
 module.exports = {
     home,

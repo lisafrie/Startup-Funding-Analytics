@@ -118,6 +118,15 @@ FROM CleanedRound r
 GROUP BY round_type
 ORDER BY SUM(IF(company_country != investor_country,1,0)) / COUNT(*) DESC
 
+# (11) Display tabular company information on the company tab, including total funding and num_acquisitions.
+SELECT name, market, country, state, city, founding_date, homepage_URL, status, SUM(amount_USD) AS total_funding
+FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) AS r ON f.ID = r.company_ID
+GROUP BY ID, name, market, country, state, city, founding_date, homepage_URL, status
+ORDER BY name
+LIMIT 20;
+
+
+
 
 # Credentials:
 
