@@ -325,13 +325,14 @@ async function search_companies(req, res) {
 
 
 	if (req.query.page && !isNan(req.query.page)) {
-	  connection.query(`SELECT f.ID, f.name, f.market, f.country, f.state, f.city, c.founding_date, c.status, SUM(amount_USD) AS total_funding
-		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
-		WHERE name LIKE '%${name}%' AND
-			market LIKE '%${market}%' AND
-			country LIKE '%${country}%' AND
-			state LIKE '%${state}%' AND
-			city LIKE '%${city}%' AND
+	  connection.query(`WITH TotalFunding AS (SELECT company_ID, IFNULL(SUM(amount_USD), 0) AS total_funding FROM (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r GROUP BY company_ID)
+		SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, c.founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
+		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN TotalFunding tf ON f.ID = tf.company_ID
+		WHERE name LIKE "%${name}%" AND
+			market LIKE "%${market}%" AND
+			country LIKE "%${country}%" AND
+			state LIKE "%${state}%" AND
+			city LIKE "%${city}%" AND
 			total_funding >= ${total_fundingLow} AND total_funding <= ${total_fundingHigh}
 		GROUP BY ID, name, market, country, state, city, founding_date, status
 		ORDER BY name
@@ -344,13 +345,14 @@ async function search_companies(req, res) {
 	    }
 	  });
 	} else {
-	  connection.query(`SELECT f.ID, f.name, f.market, f.country, f.state, f.city, c.founding_date, c.status, SUM(amount_USD) AS total_funding
-		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
-		WHERE name LIKE '%${name}%' AND
-			market LIKE '%${market}%' AND
-			country LIKE '%${country}%' AND
-			state LIKE '%${state}%' AND
-			city LIKE '%${city}%' AND
+	  connection.query(`WITH TotalFunding AS (SELECT company_ID, IFNULL(SUM(amount_USD), 0) AS total_funding FROM (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r GROUP BY company_ID)
+		SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, c.founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
+		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN TotalFunding tf ON f.ID = tf.company_ID
+		WHERE name LIKE "%${name}%" AND
+			market LIKE "%${market}%" AND
+			country LIKE "%${country}%" AND
+			state LIKE "%${state}%" AND
+			city LIKE "%${city}%" AND
 			total_funding >= ${total_fundingLow} AND total_funding <= ${total_fundingHigh}
 		GROUP BY ID, name, market, country, state, city, founding_date, status
 		ORDER BY name`, function (error, results, fields) {
@@ -385,10 +387,15 @@ async function company(req, res) {
 async function company_rounds(req, res) {
 	const id = req.query.id
 
-	connection.query(`SELECT DISTINCT ID, f.name AS company, round_number, round_type, r.date AS funding_date, amount_USD, a.date AS acquisition_date, a.price, a.currency
-		FROM Financial_Entity f LEFT JOIN Round r ON f.ID = r.company_ID LEFT JOIN Acquisition a ON f.ID = a.acquired_ID
+	connection.query(`(SELECT DISTINCT ID, f.name AS company, round_number, round_type, r.date AS funding_date, amount_USD, "USD" AS currency
+		FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID
 		WHERE ID = ${id}
-		ORDER BY date DESC`, function (error, results, fields) {
+		ORDER BY r.date DESC)
+	UNION
+		(SELECT DISTINCT ID, f.name AS company, "NA" AS round_number, "acquisition" AS round_type, a.date AS acquisition_date, a.price, a.currency
+		FROM Financial_Entity f JOIN Acquisition a ON f.ID = a.acquired_ID
+		WHERE ID = ${id}
+		ORDER BY a.date DESC)`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
 		res.json({error: error})
@@ -402,12 +409,13 @@ async function company_rounds(req, res) {
 async function company_investors(req, res) {
 	const id = req.query.id
 
-	connection.query(`SELECT ID, investor_ID, f1.name AS investor, round_number, round_type, f1.market AS investor_market, acquirer_ID, f2.name AS acquirer, f2.market AS acquirer_market
+	connection.query(`(SELECT f.ID AS company_ID, investor_ID, f1.name AS investor, round_number, round_type, f1.market
 		FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID JOIN Financial_Entity f1 ON f1.ID = r.investor_ID
-			LEFT JOIN Acquisition a ON f.ID = a.acquired_ID JOIN Financial_Entity f2 ON f2.ID = a.aquirer_ID
-		WHERE ID = ${id}
-		GROUP BY ID	
-		ORDER BY date DESC`, function (error, results, fields) {
+		WHERE f.ID = ${id}
+		GROUP BY f.ID, investor_ID, round_number)
+UNION
+(SELECT f.ID, acquirer_ID AS investor_ID, f2.name AS investor, "NA" AS round_number, "acquisition" AS round_type, f2.market
+		FROM Financial_Entity f`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
 		res.json({error: error})
@@ -441,18 +449,18 @@ async function search_investors(req, res) {
 
 
 	if (req.query.page && !isNan(req.query.page)) {
-	  connection.query(`SELECT f.ID, f.name, f.market, f.country, f.state, f.city, i.is_person, num_investments, num_acquisitions
-		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID JOIN (SELECT investor_ID, COUNT(*) AS num_investments FROM Round GROUP BY investor_ID) r ON i.investor_ID = r.investor_ID
+	  connection.query(`SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, IFNULL(i.is_person, "False") AS is_person, IFNULL(num_investments, 0) AS num_investments, IFNULL(num_acquisitions, 0) AS num_acquisitions
+		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID LEFT JOIN (SELECT investor_ID, COUNT(*) AS num_investments FROM Round GROUP BY investor_ID) r ON i.investor_ID = r.investor_ID
 			LEFT JOIN (SELECT acquirer_ID, COUNT(*) AS num_acquisitions FROM Acquisition GROUP BY acquirer_ID) a ON f.ID = a.acquirer_ID
-		WHERE name LIKE '%${name}%' AND
-			market LIKE '%${market}%' AND
-			country LIKE '%${country}%' AND
-			state LIKE '%${state}%' AND
-			city LIKE '%${city}%' AND
-			is_person LIKE '%${is_person}%' AND
+		WHERE NOT ISNULL(num_investments) OR NOT ISNULL(num_acquisitions) AND
+			name LIKE "%${name}%" AND
+			market LIKE "%${market}%" AND
+			country LIKE "%${country}%" AND
+			state LIKE "%${state}%" AND
+			city LIKE "%${city}%" AND
+			is_person LIKE "%${is_person}%" AND
 			num_investments >= ${num_investmentsLow} AND num_investments <= ${num_investmentsHigh} AND
-			num_acquisitions >= ${num_acquisitionsLow} AND num_acquisitions <= ${num_acquisitionsHigh} AND
-			(num_investments > 0 OR num_acquistions > 0)
+			num_acquisitions >= ${num_acquisitionsLow} AND num_acquisitions <= ${num_acquisitionsHigh}
 		ORDER BY name
 		LIMIT ${start}, ${pagesize}`, function (error, results, fields) {
 	    if (error) {
@@ -463,18 +471,18 @@ async function search_investors(req, res) {
 	    }
 	  });
 	} else {
-	  connection.query(`SELECT f.ID, f.name, f.market, f.country, f.state, f.city, i.is_person, num_investments, num_acquisitions
-		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID JOIN (SELECT investor_ID, COUNT(*) AS num_investments FROM Round GROUP BY investor_ID) r ON i.investor_ID = r.investor_ID
+	  connection.query(`SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, IFNULL(i.is_person, "False") AS is_person, IFNULL(num_investments, 0) AS num_investments, IFNULL(num_acquisitions, 0) AS num_acquisitions
+		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID LEFT JOIN (SELECT investor_ID, COUNT(*) AS num_investments FROM Round GROUP BY investor_ID) r ON i.investor_ID = r.investor_ID
 			LEFT JOIN (SELECT acquirer_ID, COUNT(*) AS num_acquisitions FROM Acquisition GROUP BY acquirer_ID) a ON f.ID = a.acquirer_ID
-		WHERE name LIKE '%${name}%' AND
-			market LIKE '%${market}%' AND
-			country LIKE '%${country}%' AND
-			state LIKE '%${state}%' AND
-			city LIKE '%${city}%' AND
-			is_person LIKE '%${is_person}%' AND
+		WHERE NOT ISNULL(num_investments) OR NOT ISNULL(num_acquisitions) AND
+			name LIKE "%${name}%" AND
+			market LIKE "%${market}%" AND
+			country LIKE "%${country}%" AND
+			state LIKE "%${state}%" AND
+			city LIKE "%${city}%" AND
+			is_person LIKE "%${is_person}%" AND
 			num_investments >= ${num_investmentsLow} AND num_investments <= ${num_investmentsHigh} AND
-			num_acquisitions >= ${num_acquisitionsLow} AND num_acquisitions <= ${num_acquisitionsHigh} AND
-			(num_investments > 0 OR num_acquistions > 0)
+			num_acquisitions >= ${num_acquisitionsLow} AND num_acquisitions <= ${num_acquisitionsHigh}
 		ORDER BY name`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
@@ -490,10 +498,13 @@ async function search_investors(req, res) {
 async function investor(req, res) {
 	const id = req.query.id
 
-	connection.query(`SELECT f.ID, f.name, i.is_person, r.market AS investment_market, num_investments, a.market AS acquisition_market, num_acquisitions
-		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID JOIN (SELECT investor_ID, market, COUNT(*) AS num_investments FROM Round r1 JOIN Financial_Entity f2 ON r1.company_ID = f2.ID GROUP BY investor_ID, market) r ON i.investor_ID = r.investor_ID
-			LEFT JOIN (SELECT acquirer_ID, market COUNT(*) AS num_acquisitions FROM Acquisition a1 JOIN Financial_Entity f1 ON a1.acquired_ID = f1.ID GROUP BY acquirer_ID, market) a ON f.ID = a.acquirer_ID
-		WHERE ID = ${id}`, function (error, results, fields) {
+	connection.query(`(SELECT f.ID, f.name, a.market, "acquistion" AS type, num_acquisitions
+		FROM Financial_Entity f JOIN (SELECT acquirer_ID, market, COUNT(*) AS num_acquisitions FROM Acquisition a1 JOIN Financial_Entity f1 ON a1.acquired_ID = f1.ID GROUP BY acquirer_ID, market) a ON f.ID = a.acquirer_ID
+		WHERE ID = ${id})
+		UNION
+		(SELECT f.ID, f.name, r.market, "investment" AS type, num_investments
+		FROM Financial_Entity f JOIN Investor i ON f.ID = i.investor_ID JOIN (SELECT investor_ID, market, COUNT(*) AS num_investments FROM Round r1 JOIN Financial_Entity f2 ON r1.company_ID = f2.ID GROUP BY investor_ID, market) r ON i.investor_ID = r.investor_ID
+		WHERE ID = ${id})`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
 		res.json({error: error})
@@ -509,8 +520,9 @@ async function investor_companies(req, res) {
 
 	connection.query(`SELECT o.investor_ID, o.investor_name, o.company_ID, o.investment_name, r1.investor_ID AS coinvestor_ID, f2.name AS coinvestor_name
 		FROM (SELECT r.investor_ID, f.name AS investor_name, r.company_ID, f1.name AS investment_name
-			FROM Financial_Entity f JOIN Round r ON r.investor_ID = f.ID JOIN Financial_Entity f1 ON f1.ID = r.company_ID
-			WHERE ID = ${id}) o LEFT JOIN ROUND r1 ON r1.company_ID = o.company_ID JOIN Financial_Entity f2 ON f2.ID = r1.investor_ID
+			    FROM Financial_Entity f JOIN Round r ON r.investor_ID = f.ID JOIN Financial_Entity f1 ON f1.ID = r.company_ID
+			    WHERE f.ID = ${id}) o LEFT JOIN Round r1 ON r1.company_ID = o.company_ID JOIN Financial_Entity f2 ON f2.ID = r1.investor_ID
+		    WHERE r1.investor_ID != ${id}
 		, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
