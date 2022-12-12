@@ -522,7 +522,7 @@ async function investor_companies(req, res) {
 		FROM (SELECT r.investor_ID, f.name AS investor_name, r.company_ID, f1.name AS investment_name
 			    FROM Financial_Entity f JOIN Round r ON r.investor_ID = f.ID JOIN Financial_Entity f1 ON f1.ID = r.company_ID
 			    WHERE f.ID = ${id}) o LEFT JOIN Round r1 ON r1.company_ID = o.company_ID JOIN Financial_Entity f2 ON f2.ID = r1.investor_ID
-		    WHERE r1.investor_ID != ${id}
+		    WHERE r1.investor_ID != ${id}`
 		, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
@@ -542,5 +542,11 @@ module.exports = {
     market_funding_share,
     international_funding,
     populate_us_heatmap,
-    company
+    search_companies,
+    company,
+    company_rounds,
+    company_investors,
+    search_investors,
+    investor,
+    investor_companies
 }
