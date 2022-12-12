@@ -1,10 +1,10 @@
 {
-  "short_name": "FIFA Client",
-  "name": "CIS 550 - HW2 FIFA Client",
+  "short_name": "Startup Analysis",
+  "name": "CIS 550 - Startup Analysis",
   "icons": [
     {
-      "src": "football.svg",
-      "type": "image/png",
+      "src": "icon.svg",
+      "type": "image/svg",
       "sizes": "512x512"
     }
   ],
