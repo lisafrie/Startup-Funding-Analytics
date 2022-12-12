@@ -7,7 +7,9 @@ import {
 } from 'react-router-dom';
 
 import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
 import CompanyPage from './pages/CompanyPage';
+import InvestorPage from './pages/InvestorPage';
 import 'antd/dist/antd.css';
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -18,15 +20,25 @@ ReactDOM.render(
     <Router>
       <Switch>
         <Route exact
-		path="/"
-		render={() => (
-			<HomePage />
-		)}/>
+				path="/"
+				render={() => (
+					<HomePage />
+				)}/>
 		<Route exact
-		path="/company"
-		render={() => (
-			<CompanyPage />
-		)}/>
+				path="/dashboard"
+				render={() => (
+					<DashboardPage />
+				)} />
+		<Route exact
+				path="/company"
+				render={() => (
+					<CompanyPage />
+				)}/>
+		<Route exact
+				path="/investor"
+				render={() => (
+					<InvestorPage />
+				)}/>
       </Switch>
     </Router>
   </div>,
