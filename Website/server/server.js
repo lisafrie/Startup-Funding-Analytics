@@ -30,7 +30,7 @@ app.get('/market_funding_share', routes.market_funding_share)
 app.get('/international_funding', routes.international_funding)
 
 // Route 6 - register as GET
-app.get('/populate_us_heatmap', routes.populate_us_heatmap)
+app.get('/dashboard', routes.populate_us_heatmap)
 
 // Route 7 - register as GET
 app.get('/search_companies', routes.search_companies)

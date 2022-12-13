@@ -8,10 +8,15 @@ const getHome = async () => {
 }
 
 const getDashboard = async (kpi, market, year) => {
-    var res = await fetch(`http://${config.server_host}:${config.server_port}/dashboard?kpi=${kpi}&market=${market}&year=${year}`, {
-        method: 'GET',
-    })
-    return res.json()
+    try {
+        var res = await fetch(`http://${config.server_host}:${config.server_port}/dashboard?kpi=${kpi}&market=${market}&year=${year}`, {
+            method: 'GET',
+        })
+        return res.json()
+    } catch (error) {
+        console.error(error)
+        return null
+    }
 }
 
 const getCompany = async () => {
