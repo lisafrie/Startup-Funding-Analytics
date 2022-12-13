@@ -6,6 +6,8 @@ import {
 	Switch
 } from 'react-router-dom';
 
+import "./styles.css";
+
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import CompanyPage from './pages/CompanyPage';
@@ -26,8 +28,8 @@ ReactDOM.render(
 				)}/>
 		<Route exact
 				path="/dashboard"
-				render={() => (
-					<DashboardPage />
+					render={() => (
+						<DashboardPage />
 				)} />
 		<Route exact
 				path="/company"

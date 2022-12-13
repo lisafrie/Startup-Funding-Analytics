@@ -2,21 +2,26 @@ import React from 'react';
 
 import { getDashboard } from '../fetcher'
 
+import Map from "../components/Map";
+
 class DashboardPage extends React.Component {
 
   constructor(props) {
     super(props)
 
     this.state = {
-      dashboard: [],
-    }
+        selectedKPI: "",
+        selectedMarket: "tech",
+        selectedYear: -1,
+        dashboardResults: []
+      }
+
   }
 
   componentDidMount() {
-    getDashboard().then(res => {
-      console.log("Dashboard")
-      console.log(res.name);
-      this.setState({ dashboard: res.name })
+      getDashboard(this.state.selectedKPI, this.state.selectedMarket, this.state.selectedYear).then(res => {
+      console.log(res);
+      this.setState({ dashboardResults: res.results })
     }) 
   }
 
@@ -25,7 +30,8 @@ class DashboardPage extends React.Component {
 
     return (
       <div>
-        {this.state.dashboard}
+            {JSON.stringify(this.state.dashboardResults)}
+            <Map />
       </div>
     )
   }
