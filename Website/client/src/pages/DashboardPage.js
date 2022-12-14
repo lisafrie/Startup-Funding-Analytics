@@ -21,7 +21,9 @@ class DashboardPage extends React.Component {
         selectedMarket: "",
         selectedYear: -1,
         dashboardResults: [],
-        content: ""
+        content: "",
+        minNum: 0,
+        maxNum: 10
       }
 
       this.handleKPIChange1 = this.handleKPIChange1.bind(this)
@@ -73,12 +75,13 @@ class DashboardPage extends React.Component {
     return (
         <div>
             <MenuBar active="dashboard" />
+
             <Button
                 className="choice"
                 variant="contained"
                 style={{
                     float: "left",
-                    marginLeft: '0 auto',
+                    width: '15vw',
                     marginTop: '3vh',
                 }}
                 onClick={this.handleKPIChange1}
@@ -90,7 +93,7 @@ class DashboardPage extends React.Component {
                 variant="contained"
                 style={{
                     float: "left",
-                    marginLeft: '2vw',
+                    marginLeft: '1vw',
                     marginTop: '3vh',
                 }}
                 onClick={this.handleKPIChange2}
@@ -102,33 +105,152 @@ class DashboardPage extends React.Component {
                 variant="contained"
                 style={{
                     float: "left",
-                    marginLeft: '2vw',
+                    marginLeft: '1vw',
                     marginTop: '3vh',
                 }}
                 onClick={this.handleKPIChange3}
             >
                 Total Funding
             </Button>
-            <Form style={{ width: '40vw', margin: '55vw', marginTop: '1vh' }}>
+
+            <Form style={{ float: 'left', marginLeft: '10vw', marginTop: '2vh' }}>
                 <Row>
-                    <Col flex={2}><FormGroup style={{ width: '15vw', margin: '0 auto' }}>
-                        <label>Market</label>
-                        <FormInput placeholder="Market" value={this.state.selectedMarket} onChange={this.handleMarketChange} onKeyPress={event => event.key === 'Enter' && this.updateDashboardResults()} />
+                    <Col flex={2}><FormGroup style={{ width: '15vw', marginLeft: '2vw' }}>
+                    <label>Market</label>
+                    <FormInput placeholder="Market" value={this.state.selectedMarket} onChange={this.handleMarketChange} onKeyPress={event => event.key === 'Enter' && this.updateDashboardResults()} />
                     </FormGroup></Col>
-                    <Col flex={2}><FormGroup style={{ width: '15vw', margin: '0 auto' }}>
-                        <label>Year</label>
-                        <FormInput placeholder="Year" value={this.state.selectedYear} onChange={this.handleYearChange} onKeyPress={event => event.key === 'Enter' && this.updateDashboardResults() } />
+                    <Col flex={2}><FormGroup style={{ width: '15vw', marginLeft: '2vw' }}>
+                    <label>Year</label>
+                    <FormInput placeholder="Year" onChange={this.handleYearChange} onKeyPress={event => event.key === 'Enter' && this.updateDashboardResults()} />
                     </FormGroup></Col>
                 </Row>
             </Form>
-            {JSON.stringify(this.state.dashboardResults)}
+
+            <div>
+                <div
+                    style={{
+                        float: 'left',
+                        marginTop: '4vh',
+                        marginLeft: '25vh',
+                    }}
+                >
+                    <p>
+                        Min: 
+                        {this.minNum}$
+                    </p>
+                </div>
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        float: "left",
+                        marginTop: '4.9vh',
+                        marginLeft: '0.5vw',
+                        backgroundColor: "#ffedea",
+                    }}
+                />
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        marginTop: '4.9vh',
+                        float: "left",
+                        backgroundColor: "#FFB5B7",
+                    }}
+                />
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        marginTop: '4.9vh',
+                        float: "left",
+                        backgroundColor: "#FF9794",
+                    }}
+                />
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        marginTop: '4.9vh',
+                        float: "left",
+                        backgroundColor: "#FD8075",
+                    }}
+                />
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        marginTop: '4.9vh',
+                        float: "left",
+                        backgroundColor: "#F96D57",
+                    }}
+                />
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        marginTop: '4.9vh',
+                        float: "left",
+                        backgroundColor: "#F45D3A",
+                    }}
+                />
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        marginTop: '4.9vh',
+                        float: "left",
+                        backgroundColor: "#ED511F",
+                    }}
+                />
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        marginTop: '4.9vh',
+                        float: "left",
+                        backgroundColor: "#D43B18",
+                    }}
+                />
+                <div
+                    style={{
+                        width: "30px",
+                        height: "20px",
+                        marginTop: '4.9vh',
+                        float: "left",
+                        backgroundColor: "#BA2812",
+                    }}
+                />
+                <div
+                    style={{
+                        float: "left",
+                        marginTop: '4.5vh',
+                        marginLeft: '0.5vw'
+                    }}
+                >
+                    <p>
+                        Max: 
+                        {this.maxNum}$
+                    </p>
+                </div>
+
+                <div
+                    style={{
+                        float: 'top',
+                        margin: '0vh'
+                    }}
+                >
             <Map
                 dashboardResults={this.state.dashboardResults}
                 tooltipContent={this.setState.content}
                 kpi={this.state.selectedKPI}
             />
             <ReactTooltip>{this.content}</ReactTooltip>
-      </div>
+                </div>
+                <br></br>
+                <br></br>
+            </div>
+        </div>
     )
   }
 
