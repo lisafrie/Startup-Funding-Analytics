@@ -14,39 +14,22 @@ import {
     getFundingShare,
     getInternationalFunding, } from '../fetcher'
 import MenuBar from '../components/MenuBar';
-import PieChart from "../components/PieChart";
+import LineCChart from "../components/LineCharts";
+import PieCChart from '../components/PieChart';
 
 class HomePage extends React.Component {
 
   constructor(props) {
     super(props)
 
-    this.state = {
-        selectedMarket: "",
-        selectedYear: -1,
-        fundingValue: [],
-        fundingNumber: [],
-        foundingDates: [],
-        fundingShare: [],
-        internationalFunding: [],
-        pieChartData: [{
-            type: 'bar',
-            data: {
-                labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-                datasets: [{
-                    label: '# of Votes',
-                    data: [12, 19, 3, 5, 2, 3],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        }]
+      this.state = {
+          selectedMarket: "",
+          selectedYear: -1,
+          fundingValue: [],
+          fundingNumber: [],
+          foundingDates: [],
+          fundingShare: [],
+          internationalFunding: []
 
       }
 
@@ -88,6 +71,7 @@ class HomePage extends React.Component {
             this.setState({ internationalFunding: res.results })
         }) 
     }
+
 
   componentDidMount() {
       getFundingValue(this.state.selectedMarket).then(res => {
@@ -144,25 +128,42 @@ class HomePage extends React.Component {
             <br></br>
             <br></br>
             <br></br>
+            <br></br>
 
-            <div>
-                <canvas id="myChart"></canvas>
+            <div className="left">
+
+            <LineCChart 
+                queryResults={this.state.fundingValue}
+                kpi={"total_funding"}
+                title={"$ Funding"}
+                />
+            </div>
+            <div className="middle">
+                <LineCChart 
+                queryResults={this.state.fundingNumber}
+                kpi={"funded_count"}
+                title={"# Funded Companies"}
+            />
+            </div>
+            <div className="right">
+                <LineCChart
+                queryResults={this.state.foundingDates}
+                kpi={"founded_count"}
+                title={"# Founded Companies"}
+                />
             </div>
 
-{/*            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{/*            <br></br>
+            <div className="left">
+                <PieCChart
+                    queryResults={this.state.fundingShare}
+                    title={"Funding by Market"}
+                />
+            </div>
 
-            <script>
-                const ctx = document.getElementById('myChart');
-                new Chart(ctx, {this.state.pieChartData});
-            </script>*/}
 
+            {JSON.stringify(this.state.fundingShare)}*/}
 
-
-            <br></br>
-            <PieChart chartData={this.state.pieChartData} />
-            {JSON.stringify(this.state.fundingValue)}
-            <br></br>
-            {JSON.stringify(this.state.fundingNumber)}
       </div>
     )
   }

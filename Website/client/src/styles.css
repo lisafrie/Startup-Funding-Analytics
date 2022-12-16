@@ -12,3 +12,18 @@ svg {
     display: inline-block;
     vertical-align: middle;
 }
+
+.left {
+    float: left;
+    width: 33%;
+}
+
+.middle {
+    float: left;
+    width: 33%;
+}
+
+.right {
+    float: right;
+    width: 33%;
+}
