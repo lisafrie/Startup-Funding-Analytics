@@ -76,6 +76,7 @@ class DashboardPage extends React.Component {
         <div>
             <MenuBar active="dashboard" />
 
+            {/* Buttons to choose KPI */}
             <Button
                 className="choice"
                 variant="contained"
@@ -113,6 +114,10 @@ class DashboardPage extends React.Component {
                 Total Funding
             </Button>
 
+            {/* Forms to input market and year
+             * shows 0 if input invalid
+             * accepts partial overlap in market names
+             * uses all years / all markets if no input */}
             <Form style={{ float: 'left', marginLeft: '10vw', marginTop: '2vh' }}>
                 <Row>
                     <Col flex={2}><FormGroup style={{ width: '15vw', marginLeft: '2vw' }}>
@@ -126,6 +131,7 @@ class DashboardPage extends React.Component {
                 </Row>
             </Form>
 
+            {/* Legend for color scale */}
             <div>
                 <div
                     style={{
@@ -136,7 +142,7 @@ class DashboardPage extends React.Component {
                 >
                     <p>
                         Min: 
-                        {this.minNum}$
+                        {/*  {this.state.minNum}*/}$
                     </p>
                 </div>
                 <div
@@ -230,7 +236,7 @@ class DashboardPage extends React.Component {
                 >
                     <p>
                         Max: 
-                        {this.maxNum}$
+                        {/* {this.state.maxNum}*/}$
                     </p>
                 </div>
 
@@ -240,6 +246,8 @@ class DashboardPage extends React.Component {
                         margin: '0vh'
                     }}
                 >
+
+            {/* Heatmap */}
             <Map
                 dashboardResults={this.state.dashboardResults}
                 tooltipContent={this.setState.content}

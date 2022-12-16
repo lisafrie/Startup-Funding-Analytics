@@ -1,10 +1,63 @@
 import config from './config.json'
 
-const getHome = async () => {
-    var res = await fetch(`http://${config.server_host}:${config.server_port}/`, {
-        method: 'GET',
-    })
-    return res.json()
+const getFundingValue = async (market) => {
+    try {
+        var res = await fetch(`http://${config.server_host}:${config.server_port}/timeseries_funding?market=${market}`, {
+            method: 'GET',
+        })
+        return res.json()
+    } catch (error) {
+        console.error(error)
+        return null
+    }
+}
+
+const getFundingNumber = async (market) => {
+    try {
+        var res = await fetch(`http://${config.server_host}:${config.server_port}/timeseries_count_funding?market=${market}`, {
+            method: 'GET',
+        })
+        return res.json()
+    } catch (error) {
+        console.error(error)
+        return null
+    }
+}
+
+const getFoundingDates = async (market) => {
+    try {
+        var res = await fetch(`http://${config.server_host}:${config.server_port}/timeseries_founding_dates?market=${market}`, {
+            method: 'GET',
+        })
+        return res.json()
+    } catch (error) {
+        console.error(error)
+        return null
+    }
+}
+
+const getFundingShare = async (year) => {
+    try {
+        var res = await fetch(`http://${config.server_host}:${config.server_port}/market_funding_share?year=${year}`, {
+            method: 'GET',
+        })
+        return res.json()
+    } catch (error) {
+        console.error(error)
+        return null
+    }
+}
+
+const getInternationalFunding = async (year, market) => {
+    try {
+        var res = await fetch(`http://${config.server_host}:${config.server_port}/international_funding?year=${year}&market=${market}`, {
+            method: 'GET',
+        })
+        return res.json()
+    } catch (error) {
+        console.error(error)
+        return null
+    }
 }
 
 const getDashboard = async (kpi, market, year) => {
@@ -34,7 +87,11 @@ const getInvestor = async () => {
 }
 
 export {
-    getHome,
+    getFundingValue,
+    getFundingNumber,
+    getFoundingDates,
+    getFundingShare,
+    getInternationalFunding,
     getDashboard,
     getCompany,
     getInvestor
