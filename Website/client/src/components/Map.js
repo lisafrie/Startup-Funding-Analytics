@@ -137,9 +137,9 @@ const Map = ({ dashboardResults, tooltipContent, kpi }) => {
 
     return (
         
-        <ComposableMap height={400} projection="geoAlbersUsa"
+        <ComposableMap height={350} projection="geoAlbersUsa"
             projectionConfig={{
-                scale: 900
+                scale: 800
         }}>
             <Geographies data-tip="React-tooltip" geography={geoUrl}>
                 {({ geographies }) => (

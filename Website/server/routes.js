@@ -109,9 +109,10 @@ async function timeseries_founding_dates(req, res) {
 async function market_funding_share(req, res) {
     // Returns proportion of funds allocated to each market, filtered by year if specified
     
-    const year = req.query.year
+    year = -1
+    if (req.query.year) { year = req.query.year }
     
-    if (year) {
+    if (year >= 1990 & year <= 2014) {
     connection.query(`
       
     SELECT market, SUM(amount_USD) AS total_funding
@@ -157,10 +158,10 @@ async function international_funding(req, res) {
   
     market = ""
     if (req.query.market) {market = req.query.market}
-    year = ""
-    if (req.query.year) {year = req.query.year}
+    year = -1
+    if (req.query.year) { year = req.query.year }
     
-    if (year) {
+    if (year >= 1990 & year <= 2014) {
  
     connection.query(`WITH CleanedRound AS (
     SELECT company_ID, investor_ID, round_type, date
@@ -207,7 +208,7 @@ async function international_funding(req, res) {
         FROM Financial_Entity
         WHERE is_a = "investor" AND market LIKE "%${market}%" AND country IS NOT NULL
     )
-    SELECT round_type, YEAR(date),
+    SELECT round_type,
            SUM(IF(company_country != investor_country,1,0)) / COUNT(*) *
     100 AS percentage_international
     FROM CleanedRound r
@@ -236,15 +237,14 @@ async function populate_us_heatmap(req, res) {
     market = ""
     if (req.query.market) {market = req.query.market}
     
-    kpi = "Count_of_Funded_Companies"
     if (req.query.kpi) {kpi = req.query.kpi}
     
     year = -1
     if (req.query.year) {year = req.query.year}
     
     if (kpi === "Net_Funding") {
-  
-      connection.query(`SELECT f.state,
+
+        connection.query(`SELECT f.state,
       IFNULL(SUM(r.amount_USD),0) - IFNULL(SUM(r1.amount_USD),0) AS
       net_funding
       FROM Financial_Entity f
@@ -255,17 +255,18 @@ async function populate_us_heatmap(req, res) {
       ORDER BY IFNULL(SUM(r.amount_USD),0) - IFNULL(SUM(r1.amount_USD),0)
       DESC`, function (error, results, fields) {
 
-      if (error) {
-      console.log(error)
-      res.json({ error: error })
-      } else if (results) {
-      res.json({ results: results })
-      }
-    })}
-    
+            if (error) {
+                console.log(error)
+                res.json({ error: error })
+            } else if (results) {
+                res.json({ results: results })
+            }
+        })
+    }
+
     else if (kpi === "Total_Funding") {
-      
-      connection.query(`SELECT f.state,
+
+        connection.query(`SELECT f.state,
       IFNULL(SUM(r.amount_USD),0) AS total_funding
       FROM Financial_Entity f
         JOIN Round r ON f.ID = r.company_ID
@@ -274,17 +275,18 @@ async function populate_us_heatmap(req, res) {
       ORDER BY IFNULL(SUM(r.amount_USD),0)
       DESC`, function (error, results, fields) {
 
-      if (error) {
-      console.log(error)
-      res.json({ error: error })
-      } else if (results) {
-      res.json({ results: results })
-      }
-    })}
-    
-    else {
-      
-      connection.query(`SELECT f.state,
+            if (error) {
+                console.log(error)
+                res.json({ error: error })
+            } else if (results) {
+                res.json({ results: results })
+            }
+        })
+    }
+
+    else if (kpi === "Count_of_Funded_Companies") {
+
+        connection.query(`SELECT f.state,
       COUNT(DISTINCT f.ID) AS count_companies
       FROM Financial_Entity f
         JOIN Round r ON f.ID = r.company_ID
@@ -293,13 +295,25 @@ async function populate_us_heatmap(req, res) {
       ORDER BY IFNULL(SUM(r.amount_USD),0)
       DESC`, function (error, results, fields) {
 
-      if (error) {
-      console.log(error)
-      res.json({ error: error })
-      } else if (results) {
-      res.json({ results: results })
-      }
-    })};
+            if (error) {
+                console.log(error)
+                res.json({ error: error })
+            } else if (results) {
+                res.json({ results: results })
+            }
+        })
+    }
+    else {
+        connection.query(`SELECT "ERROR" FROM Financial_Entity f`, function (error, results, fields) {
+
+            if (error) {
+                console.log(error)
+                res.json({ error: error })
+            } else if (results) {
+                res.json({ results: results })
+            }
+        })
+    };
 }
 
 // ********************************************
@@ -315,18 +329,18 @@ async function search_companies(req, res) {
 	const city = req.query.city ? req.query.city : ''
 	
 	const total_fundingLow = req.query.fundingLow ? req.query.fundingLow : 0
-	const total_fundingHigh = req.query.fundingHigh ? req.query.fundingHigh : 10000000
-	const num_acquisitionsLow = req.query.acquisitionsLow ? req.query.acquisitionsLow : 0
-	const num_acquisitionsHigh = req.query.acquisitionsHigh ? req.query.acquisitionsHigh : 10
+	const total_fundingHigh = req.query.fundingHigh ? req.query.fundingHigh : 31000000000
+/*	const num_acquisitionsLow = req.query.acquisitionsLow ? req.query.acquisitionsLow : 0
+	const num_acquisitionsHigh = req.query.acquisitionsHigh ? req.query.acquisitionsHigh : 10*/
 
 	const page = req.query.page
 	const pagesize = req.query.pagesize ? req.query.pagesize : 10
 	const start = page * pagesize - pagesize
 
 
-	if (req.query.page && !isNan(req.query.page)) {
-	  connection.query(`WITH TotalFunding AS (SELECT company_ID, IFNULL(SUM(amount_USD), 0) AS total_funding FROM (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r GROUP BY company_ID)
-		SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, c.founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
+	if (req.query.page && !isNaN(req.query.page)) {
+        connection.query(`WITH TotalFunding AS (SELECT company_ID, IFNULL(SUM(amount_USD), 0) AS total_funding FROM (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r GROUP BY company_ID)
+		SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, DATE_FORMAT(c.founding_date, '%Y-%m') AS founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
 		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN TotalFunding tf ON f.ID = tf.company_ID
 		WHERE name LIKE "%${name}%" AND
 			market LIKE "%${market}%" AND
@@ -345,8 +359,8 @@ async function search_companies(req, res) {
 	    }
 	  });
 	} else {
-	  connection.query(`WITH TotalFunding AS (SELECT company_ID, IFNULL(SUM(amount_USD), 0) AS total_funding FROM (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r GROUP BY company_ID)
-		SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, c.founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
+        connection.query(`WITH TotalFunding AS (SELECT company_ID, IFNULL(SUM(amount_USD), 0) AS total_funding FROM (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r GROUP BY company_ID)
+		SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, DATE_FORMAT(c.founding_date, '%Y-%m') AS founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
 		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN TotalFunding tf ON f.ID = tf.company_ID
 		WHERE name LIKE "%${name}%" AND
 			market LIKE "%${market}%" AND
@@ -368,11 +382,11 @@ async function search_companies(req, res) {
 
 // Route 8 (handler)
 async function company(req, res) {
-	const id = req.query.id
+    const ID = req.query.ID ? req.query.ID : -1;
 
-	connection.query(`SELECT ID, name, founding_date, homepage_URL, f.market AS company_market, SUM(amount_USD) AS total_funding
-		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
-		WHERE ID = ${id} 
+    connection.query(`SELECT ID, name, DATE_FORMAT(date, '%Y-%m') AS date, homepage_URL, f.market AS company_market, SUM(amount_USD) AS total_funding
+		FROM Financial_Entity f JOIN Company c ON f.ID = c.company_ID LEFT JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
+		WHERE ID = ${ID} 
 		GROUP BY ID`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
@@ -385,16 +399,16 @@ async function company(req, res) {
 
 // Route 9 (handler)
 async function company_rounds(req, res) {
-	const id = req.query.id
+	const ID = req.query.ID ? req.query.ID : -1;
 
-	connection.query(`(SELECT DISTINCT ID, f.name AS company, round_number, round_type, r.date AS funding_date, amount_USD, "USD" AS currency
+    connection.query(`(SELECT DISTINCT ID, f.name AS company, round_number, round_type, DATE_FORMAT(r.date, '%Y-%m') AS funding_date, amount_USD, "USD" AS currency
 		FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID
-		WHERE ID = ${id}
+		WHERE ID = ${ID}
 		ORDER BY r.date DESC)
 	UNION
-		(SELECT DISTINCT ID, f.name AS company, "NA" AS round_number, "acquisition" AS round_type, a.date AS acquisition_date, a.price, a.currency
+		(SELECT DISTINCT ID, f.name AS company, "NA" AS round_number, "acquisition" AS round_type, DATE_FORMAT(a.date, '%Y-%m') AS acquisition_date, a.price, a.currency
 		FROM Financial_Entity f JOIN Acquisition a ON f.ID = a.acquired_ID
-		WHERE ID = ${id}
+		WHERE ID = ${ID}
 		ORDER BY a.date DESC)`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
@@ -407,15 +421,17 @@ async function company_rounds(req, res) {
 
 // Route 10 (handler)
 async function company_investors(req, res) {
-	const id = req.query.id
+    const ID = req.query.ID ? req.query.ID : -1;
 
-	connection.query(`(SELECT f.ID AS company_ID, investor_ID, f1.name AS investor, round_number, round_type, f1.market
+    connection.query(`(SELECT f.ID AS company_ID, investor_ID, f1.name AS investor, round_number, round_type, f1.market
 		FROM Financial_Entity f JOIN Round r ON f.ID = r.company_ID JOIN Financial_Entity f1 ON f1.ID = r.investor_ID
-		WHERE f.ID = ${id}
+		WHERE f.ID = ${ID}
 		GROUP BY f.ID, investor_ID, round_number)
-UNION
-(SELECT f.ID, acquirer_ID AS investor_ID, f2.name AS investor, "NA" AS round_number, "acquisition" AS round_type, f2.market
-		FROM Financial_Entity f`, function (error, results, fields) {
+    UNION
+        (SELECT f3.ID AS company_ID, acquirer_ID AS investor_ID, f2.name AS investor, "NA" AS round_number, "acquisition" AS round_type, f2.market
+		FROM Financial_Entity f3 JOIN Acquisition A on f3.ID = A.acquired_ID JOIN Financial_Entity f2 ON f2.ID = A.acquirer_ID
+		WHERE f3.ID = ${ID}
+		GROUP BY f3.ID, acquirer_ID, round_number)`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
 		res.json({error: error})
@@ -448,7 +464,7 @@ async function search_investors(req, res) {
 	const start = page * pagesize - pagesize
 
 
-	if (req.query.page && !isNan(req.query.page)) {
+	if (req.query.page && !isNaN(req.query.page)) {
 	  connection.query(`SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state, IFNULL(f.city, "") AS city, IFNULL(i.is_person, "False") AS is_person, IFNULL(num_investments, 0) AS num_investments, IFNULL(num_acquisitions, 0) AS num_acquisitions
 		FROM Financial_Entity f LEFT JOIN Investor i ON f.ID = i.investor_ID LEFT JOIN (SELECT investor_ID, COUNT(*) AS num_investments FROM Round GROUP BY investor_ID) r ON i.investor_ID = r.investor_ID
 			LEFT JOIN (SELECT acquirer_ID, COUNT(*) AS num_acquisitions FROM Acquisition GROUP BY acquirer_ID) a ON f.ID = a.acquirer_ID
@@ -496,15 +512,17 @@ async function search_investors(req, res) {
 
 // Route 12 (handler)
 async function investor(req, res) {
-	const id = req.query.id
+	const ID = req.query.ID
 
-	connection.query(`(SELECT f.ID, f.name, a.market, "acquistion" AS type, num_acquisitions
+    connection.query(`SELECT table1.ID, table1.name, table1.market, AVG(IF(type = "investment", num_acquisitions, null)) AS "num_investments", AVG(IF(type = "acquistion", num_acquisitions, null)) AS "num_acquisitions"
+        FROM ((SELECT f.ID, f.name, a.market, "acquistion" AS type, num_acquisitions
 		FROM Financial_Entity f JOIN (SELECT acquirer_ID, market, COUNT(*) AS num_acquisitions FROM Acquisition a1 JOIN Financial_Entity f1 ON a1.acquired_ID = f1.ID GROUP BY acquirer_ID, market) a ON f.ID = a.acquirer_ID
-		WHERE ID = ${id})
+		WHERE ID = ${ID})
 		UNION
 		(SELECT f.ID, f.name, r.market, "investment" AS type, num_investments
 		FROM Financial_Entity f JOIN Investor i ON f.ID = i.investor_ID JOIN (SELECT investor_ID, market, COUNT(*) AS num_investments FROM Round r1 JOIN Financial_Entity f2 ON r1.company_ID = f2.ID GROUP BY investor_ID, market) r ON i.investor_ID = r.investor_ID
-		WHERE ID = ${id})`, function (error, results, fields) {
+		WHERE ID = ${ID})) AS table1
+        GROUP BY table1.ID, table1.name, table1.market`, function (error, results, fields) {
 	    if (error) {
 		console.log(error)
 		res.json({error: error})

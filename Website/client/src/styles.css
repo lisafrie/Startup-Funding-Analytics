@@ -1,6 +1,6 @@
 html {
     font-family: system-ui, sans-serif;
-    font-size: 1.25rem;
+    font-size: 1rem;
 }
 
 body {
@@ -11,4 +11,28 @@ body {
 svg {
     display: inline-block;
     vertical-align: middle;
+}
+
+.left {
+    float: left;
+    width: 33%;
+}
+
+.middle {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 0.8rem;
+    margin-top: 1.5rem;
+    margin-left: 27rem;
+}
+
+.right {
+    float: right;
+    width: 33%;
+}
+
+.graph {
+    margin-left: 3rem;
+    margin-top: 1rem;
+
 }
