@@ -15,8 +15,9 @@ import {
     getInternationalFunding, } from '../fetcher'
 import MenuBar from '../components/MenuBar';
 import LineCChart from "../components/LineCharts";
-import PieCChart from '../components/PieChart';
-
+import BarCChart from "../components/BarCharts";
+/*import PieCChart from '../components/PieChart';
+*/
 class HomePage extends React.Component {
 
   constructor(props) {
@@ -29,9 +30,10 @@ class HomePage extends React.Component {
           fundingNumber: [],
           foundingDates: [],
           fundingShare: [],
-          internationalFunding: []
-
+          internationalFunding: [],
+          message: "no year selected - displaying all data"
       }
+
 
       this.handleMarketChange = this.handleMarketChange.bind(this)
       this.handleYearChange = this.handleYearChange.bind(this)
@@ -46,6 +48,14 @@ class HomePage extends React.Component {
     }
 
     updateResults() {
+        if (this.state.selectedYear === "" | this.state.selectedYear == -1) {
+            this.setState({ message: "no year selected - displaying all data" });
+        } else if (this.state.selectedYear <= 2014 & this.state.selectedYear >= 2000) {
+            this.setState({ message: <br></br> });
+        } else {
+            this.setState({ message: "invalid year - please select a year between 2000 and 2014" });
+        }
+
         getFundingValue(this.state.selectedMarket).then(res => {
             console.log(res);
             this.setState({ fundingValue: res.results })
@@ -106,12 +116,13 @@ class HomePage extends React.Component {
     return (
         <div>
             <MenuBar active="Home" />
+{/*            {JSON.stringify(this.state.internationalFunding)}*/}
 
             {/* Forms to input market and year
              * shows 0 if input invalid
              * accepts partial overlap in market names
              * uses all years / all markets if no input */}
-            <Form style={{ float: 'left', marginLeft: '1vw', marginTop: '2vh' }}>
+            <Form style={{ float: 'left', marginLeft: '1vw', marginTop: '2vh', marginRight: '2vw' }}>
                 <Row>
                     <Col flex={2}><FormGroup style={{ width: '15vw', marginLeft: '2vw' }}>
                         <label>Market</label>
@@ -124,12 +135,25 @@ class HomePage extends React.Component {
                 </Row>
             </Form>
 
-            <br></br>
-            <br></br>
-            <br></br>
-            <br></br>
+
+            <p>
+                <br></br>
+                <font size="2">
+                    {this.state.message}
+                </font>
+            </p>
+            
+
+            {JSON.stringify(this.state.fundingValue) === "[]" ?
+                <p> <font size="2">
+                    no market found, please try again </font>
+                </p> : <div> <br></br> <br></br> </div>}
+
+                <div>
+
             <br></br>
 
+            
             <div className="left">
 
             <LineCChart 
@@ -138,7 +162,7 @@ class HomePage extends React.Component {
                 title={"$ Funding"}
                 />
             </div>
-            <div className="middle">
+            <div className="left">
                 <LineCChart 
                 queryResults={this.state.fundingNumber}
                 kpi={"funded_count"}
@@ -153,16 +177,25 @@ class HomePage extends React.Component {
                 />
             </div>
 
-{/*            <br></br>
+
+            <div className="middle">
+
+                <BarCChart
+                    queryResults={this.state.internationalFunding}
+                    title={"% International Funding"}
+                />
+            </div>
+
+            {/*<br></br>
             <div className="left">
                 <PieCChart
                     queryResults={this.state.fundingShare}
                     title={"Funding by Market"}
                 />
             </div>
+*/}
+                </div>
 
-
-            {JSON.stringify(this.state.fundingShare)}*/}
 
       </div>
     )

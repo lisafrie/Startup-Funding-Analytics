@@ -23,7 +23,8 @@ class DashboardPage extends React.Component {
         dashboardResults: [],
         content: "",
         minNum: 0,
-        maxNum: 10
+        maxNum: 10,
+        message: "no year selected, all data displayed"
       }
 
       this.handleKPIChange1 = this.handleKPIChange1.bind(this)
@@ -57,9 +58,21 @@ class DashboardPage extends React.Component {
     }
 
     updateDashboardResults() {
-        getDashboard(this.state.selectedKPI, this.state.selectedMarket, this.state.selectedYear).then(res => {
-            this.setState({ dashboardResults: res.results })
-        })
+        if (this.state.selectedYear === -1) {
+            this.setState({ message: "no year selected - displaying all data" }); 
+            getDashboard(this.state.selectedKPI, this.state.selectedMarket, this.state.selectedYear).then(res => {
+                this.setState({ dashboardResults: res.results })
+            })
+        } else if (this.state.selectedYear <= 2014 & this.state.selectedYear >= 1990) {
+            this.setState({ message: <br></br> });
+            getDashboard(this.state.selectedKPI, this.state.selectedMarket, this.state.selectedYear).then(res => {
+                this.setState({ dashboardResults: res.results })
+            })
+        } else {
+            this.setState({ message: "invalid year - please select a year between 1990 and 2014" });
+        }
+
+
     }
 
   componentDidMount() {
@@ -82,7 +95,6 @@ class DashboardPage extends React.Component {
                 variant="contained"
                 style={{
                     float: "left",
-                    width: '15vw',
                     marginTop: '3vh',
                 }}
                 onClick={this.handleKPIChange1}
@@ -94,7 +106,7 @@ class DashboardPage extends React.Component {
                 variant="contained"
                 style={{
                     float: "left",
-                    marginLeft: '1vw',
+                    marginLeft: '0.5vw',
                     marginTop: '3vh',
                 }}
                 onClick={this.handleKPIChange2}
@@ -106,7 +118,7 @@ class DashboardPage extends React.Component {
                 variant="contained"
                 style={{
                     float: "left",
-                    marginLeft: '1vw',
+                    marginLeft: '0.5vw',
                     marginTop: '3vh',
                 }}
                 onClick={this.handleKPIChange3}
@@ -118,26 +130,37 @@ class DashboardPage extends React.Component {
              * shows 0 if input invalid
              * accepts partial overlap in market names
              * uses all years / all markets if no input */}
-            <Form style={{ float: 'left', marginLeft: '10vw', marginTop: '2vh' }}>
+            <Form style={{ float: 'left', marginLeft: '3vw', marginTop: '2vh', marginRight: '2vw' }}>
                 <Row>
-                    <Col flex={2}><FormGroup style={{ width: '15vw', marginLeft: '2vw' }}>
+                    <Col flex={2}><FormGroup style={{ width: '12vw', marginLeft: '2vw' }}>
                     <label>Market</label>
                     <FormInput placeholder="Market" value={this.state.selectedMarket} onChange={this.handleMarketChange} onKeyPress={event => event.key === 'Enter' && this.updateDashboardResults()} />
                     </FormGroup></Col>
-                    <Col flex={2}><FormGroup style={{ width: '15vw', marginLeft: '2vw' }}>
+                    <Col flex={2}><FormGroup style={{ width: '12vw', marginLeft: '2vw' }}>
                     <label>Year</label>
                     <FormInput placeholder="Year" onChange={this.handleYearChange} onKeyPress={event => event.key === 'Enter' && this.updateDashboardResults()} />
                     </FormGroup></Col>
                 </Row>
             </Form>
 
+            <p>
+                <font size="2">
+                    <br></br>
+                    {this.state.message}
+                </font>
+            </p>
+            {JSON.stringify(this.state.dashboardResults) === "[]" ?
+                <p> <font size="2">
+                    no market found, please try again </font>
+                </p> : <div> <br></br><br></br> </div>}
+
             {/* Legend for color scale */}
             <div>
                 <div
                     style={{
                         float: 'left',
-                        marginTop: '4vh',
-                        marginLeft: '25vh',
+                        marginTop: '0vh',
+                        marginLeft: '4vh',
                     }}
                 >
                     <p>
@@ -150,7 +173,7 @@ class DashboardPage extends React.Component {
                         width: "30px",
                         height: "20px",
                         float: "left",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         marginLeft: '0.5vw',
                         backgroundColor: "#ffedea",
                     }}
@@ -159,7 +182,7 @@ class DashboardPage extends React.Component {
                     style={{
                         width: "30px",
                         height: "20px",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         float: "left",
                         backgroundColor: "#FFB5B7",
                     }}
@@ -168,7 +191,7 @@ class DashboardPage extends React.Component {
                     style={{
                         width: "30px",
                         height: "20px",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         float: "left",
                         backgroundColor: "#FF9794",
                     }}
@@ -177,7 +200,7 @@ class DashboardPage extends React.Component {
                     style={{
                         width: "30px",
                         height: "20px",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         float: "left",
                         backgroundColor: "#FD8075",
                     }}
@@ -186,7 +209,7 @@ class DashboardPage extends React.Component {
                     style={{
                         width: "30px",
                         height: "20px",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         float: "left",
                         backgroundColor: "#F96D57",
                     }}
@@ -195,7 +218,7 @@ class DashboardPage extends React.Component {
                     style={{
                         width: "30px",
                         height: "20px",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         float: "left",
                         backgroundColor: "#F45D3A",
                     }}
@@ -204,7 +227,7 @@ class DashboardPage extends React.Component {
                     style={{
                         width: "30px",
                         height: "20px",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         float: "left",
                         backgroundColor: "#ED511F",
                     }}
@@ -213,7 +236,7 @@ class DashboardPage extends React.Component {
                     style={{
                         width: "30px",
                         height: "20px",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         float: "left",
                         backgroundColor: "#D43B18",
                     }}
@@ -222,7 +245,7 @@ class DashboardPage extends React.Component {
                     style={{
                         width: "30px",
                         height: "20px",
-                        marginTop: '4.9vh',
+                        marginTop: '0.5vh',
                         float: "left",
                         backgroundColor: "#BA2812",
                     }}
@@ -230,7 +253,7 @@ class DashboardPage extends React.Component {
                 <div
                     style={{
                         float: "left",
-                        marginTop: '4.5vh',
+                        marginTop: '0vh',
                         marginLeft: '0.5vw'
                     }}
                 >
@@ -239,6 +262,8 @@ class DashboardPage extends React.Component {
                         {/* {this.state.maxNum}*/}$
                     </p>
                 </div>
+
+
 
                 <div
                     style={{
