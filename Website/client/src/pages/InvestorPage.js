@@ -1,30 +1,22 @@
 import React from 'react';
-import { Form, FormInput, FormGroup, Button, Card, CardBody, CardTitle, Progress } from "shards-react";
+import { Form, FormInput, FormGroup, Button, Card, CardBody } from "shards-react";
 
 import {
     Table,
-    Pagination,
-    Select,
     Row,
     Col,
-    Divider,
-    Slider,
-    Rate
 } from 'antd'
-import { format } from 'd3-format';
 
 import { getInvestorSearch, getInvestor } from '../fetcher'
 
 import MenuBar from '../components/MenuBar';
-
-const { Column, ColumnGroup } = Table;
 
 const investorColumns = [
     {
         title: 'Name',
         dataIndex: 'name',
         key: 'name',
-        sorter: (a, b) => a.Name.localeCompare(b.Name),
+        sorter: (a, b) => a.name.localeCompare(b.name),
         render: (text, row) => <a href={`/investor?ID=${row.ID}`}>{text}</a>
     },
     {
@@ -210,7 +202,7 @@ class InvestorPage extends React.Component {
                     <Table dataSource={this.state.investorsResults} columns={investorColumns} pagination={{ pageSizeOptions: [5, 10, 20], defaultPageSize: 5, showQuickJumper: true }} style={{ width: '70vw', margin: '0 auto', marginTop: '2vh' }} />
                 } 
 
-                {this.state.selectedInvestorDetails && this.state.selectedInvestorID != -1 ? <div style={{ width: '70vw', margin: '0 auto', marginTop: '2vh' }}>
+                {this.state.selectedInvestorDetails && this.state.selectedInvestorID !== -1 ? <div style={{ width: '70vw', margin: '0 auto', marginTop: '2vh' }}>
                     <Card>
 
                         <CardBody>

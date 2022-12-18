@@ -18,6 +18,14 @@ svg {
     width: 33%;
 }
 
+.two {
+    float: left;
+    width: 33%;
+    margin-top: 1.5rem;
+    margin-left: 8rem;
+    margin-right: 12rem;
+}
+
 .middle {
     display: inline-block;
     vertical-align: middle;
