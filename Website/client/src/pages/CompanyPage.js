@@ -201,6 +201,7 @@ class CompanyPage extends React.Component {
                     </Row>
                 </Form>
 
+                {/*Error message in case of invalid user input*/}
                 {JSON.stringify(this.state.companiesResults) === "[]" ?
                     <div style={{textAlign: 'center'} }>
                     <h4> 
@@ -208,10 +209,12 @@ class CompanyPage extends React.Component {
                         </h4>
                     </div> : 
 
+/*                    Table with all companies returned by search*/
                 <Table dataSource={this.state.companiesResults} columns={companyColumns} pagination={{ pageSizeOptions: [5, 10, 20], defaultPageSize: 5, showQuickJumper: true }} style={{ width: '70vw', margin: '0 auto', marginTop: '2vh' }} />
 
                 }
 
+{/*                Pop-up box with additional detail for selected company*/}
                 {this.state.selectedCompanyDetails && this.state.selectedCompanyRounds && this.state.selectedCompanyID !== -1 ?
                     <div style={{ width: '70vw', margin: '0 auto', marginTop: '2vh' }}>
                     <Card>
