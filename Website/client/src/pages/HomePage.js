@@ -153,6 +153,8 @@ class HomePage extends React.Component {
             </Form>
 
 
+
+            {/*Error messages in case of invalid user input*/}
             <p>
                 <br></br>
                 <font size="2">
@@ -170,7 +172,7 @@ class HomePage extends React.Component {
 
             <br></br>
 
-            
+{/*                Charts for funding amount and number as well as founding dates per year and international funding ratio */}
             <div className="left">
 
             <LineCChart 

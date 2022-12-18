@@ -193,15 +193,18 @@ class InvestorPage extends React.Component {
                     </Row>
                 </Form>
 
+                {/*Error message in case of invalid user input*/}
                 {JSON.stringify(this.state.investorsResults) === "[]" ?
                     <div style={{ textAlign: 'center' }}>
                         <h4>
                             Please wait a few seconds for the results to load. If no results found, adjust your input.
                         </h4>
                     </div> :
+                    /*                    Table with all investors returned by search*/
                     <Table dataSource={this.state.investorsResults} columns={investorColumns} pagination={{ pageSizeOptions: [5, 10, 20], defaultPageSize: 5, showQuickJumper: true }} style={{ width: '70vw', margin: '0 auto', marginTop: '2vh' }} />
                 } 
 
+                {/*                Pop-up box with additional detail for selected investor*/}
                 {this.state.selectedInvestorDetails && this.state.selectedInvestorID !== -1 ? <div style={{ width: '70vw', margin: '0 auto', marginTop: '2vh' }}>
                     <Card>
 
