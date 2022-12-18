@@ -4,7 +4,6 @@ import {
     Row,
     Col
 } from 'antd'
-import { Tooltip as ReactTooltip } from 'react-tooltip';
 
 import { getDashboard } from '../fetcher'
 
@@ -58,7 +57,7 @@ class DashboardPage extends React.Component {
     }
 
     updateDashboardResults() {
-        if (this.state.selectedYear === -1) {
+        if (this.state.selectedYear === -1 | this.state.selectedYear === "") {
             this.setState({ message: "no year selected - displaying all data" }); 
             getDashboard(this.state.selectedKPI, this.state.selectedMarket, this.state.selectedYear).then(res => {
                 this.setState({ dashboardResults: res.results })
@@ -278,7 +277,6 @@ class DashboardPage extends React.Component {
                 tooltipContent={this.setState.content}
                 kpi={this.state.selectedKPI}
             />
-            <ReactTooltip>{this.content}</ReactTooltip>
                 </div>
                 <br></br>
                 <br></br>

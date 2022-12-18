@@ -6,7 +6,6 @@ import {
     Table,
     Row,
     Col,
-    Divider,
 } from 'antd'
 
 import { getCompanySearch, getCompany, getCompanyRounds, getCompanyInvestors } from '../fetcher'
@@ -14,14 +13,13 @@ import { getCompanySearch, getCompany, getCompanyRounds, getCompanyInvestors } f
 import MenuBar from '../components/MenuBar';
 import BarChartRounds from '../components/BarChartRounds';
 
-const { Column, ColumnGroup } = Table;
 
 const companyColumns = [
     {
         title: 'Name',
         dataIndex: 'name',
         key: 'name',
-        sorter: (a, b) => a.Name.localeCompare(b.Name),
+        sorter: (a, b) => a.name.localeCompare(b.name),
         render: (text, row) => <a href={`/company?ID=${row.ID}`}>{text}</a>
     },
     {
@@ -58,16 +56,19 @@ const companyColumns = [
         title: 'Total Funding',
         dataIndex: 'total_funding',
         key: 'total_funding',
-        sorter: (a, b) => a.total_funding - b.total_funding
+        sorter: (a, b) => a.total_funding - b.total_funding,
+        render: (value) => {
+            return "US$ " + Math.round(value / 1000000).toLocaleString("en") + "M";
+        }
 
     }
 ];
 
 const investorColumns = [
     {
-        title: 'Round Number',
-        dataIndex: 'round_number',
-        key: 'round_number'
+        title: 'Date',
+        dataIndex: 'date',
+        key: 'date'
     },
     {
         title: 'Round',
@@ -211,7 +212,7 @@ class CompanyPage extends React.Component {
 
                 }
 
-                {this.state.selectedCompanyDetails && this.state.selectedCompanyRounds && this.state.selectedCompanyID != -1 ?
+                {this.state.selectedCompanyDetails && this.state.selectedCompanyRounds && this.state.selectedCompanyID !== -1 ?
                     <div style={{ width: '70vw', margin: '0 auto', marginTop: '2vh' }}>
                     <Card>
 

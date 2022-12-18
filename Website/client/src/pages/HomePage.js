@@ -3,6 +3,7 @@ import '../styles.css';
 
 import { Form, FormInput, FormGroup } from "shards-react";
 import {
+    Table,
     Row,
     Col
 } from 'antd'
@@ -16,8 +17,24 @@ import {
 import MenuBar from '../components/MenuBar';
 import LineCChart from "../components/LineCharts";
 import BarCChart from "../components/BarCharts";
-/*import PieCChart from '../components/PieChart';
-*/
+
+const marketColumns = [
+    {
+        title: 'Market',
+        dataIndex: 'market',
+        key: 'market'
+    },
+    {
+        title: 'Total Funding',
+        dataIndex: 'total_funding',
+        key: 'total_funding',
+        render: (value) => {
+            return "US$ " + Math.round(value/1000000).toLocaleString("en") + "M";
+        }
+    }
+];
+
+
 class HomePage extends React.Component {
 
   constructor(props) {
@@ -48,7 +65,7 @@ class HomePage extends React.Component {
     }
 
     updateResults() {
-        if (this.state.selectedYear === "" | this.state.selectedYear == -1) {
+        if (this.state.selectedYear === "" | this.state.selectedYear === -1) {
             this.setState({ message: "no year selected - displaying all data" });
         } else if (this.state.selectedYear <= 2014 & this.state.selectedYear >= 2000) {
             this.setState({ message: <br></br> });
@@ -178,13 +195,18 @@ class HomePage extends React.Component {
             </div>
 
 
-            <div className="middle">
+            <div className="two">
 
                 <BarCChart
                     queryResults={this.state.internationalFunding}
                     title={"% International Funding"}
                 />
-            </div>
+                </div>
+
+                <div className="left">
+                    <Table dataSource={this.state.fundingShare} columns={marketColumns} pagination={{ defaultPageSize: 5 }} style={{ width: '40vw', margin: '0 auto', marginTop: '2vh' }} />
+                </div>
+
 
             {/*<br></br>
             <div className="left">
