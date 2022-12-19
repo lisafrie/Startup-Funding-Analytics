@@ -143,6 +143,7 @@ class CompanyPage extends React.Component {
         getCompanySearch(this.state.name, this.state.market, this.state.country, this.state.selectedState, this.state.city, this.state.total_fundingLow, this.state.total_fundingHigh, null, null).then(res => {
             this.setState({ companiesResults: res.results })
         }) 
+        this.setState({ selectedCompanyID: -1 })
     }
 
     componentDidMount() {

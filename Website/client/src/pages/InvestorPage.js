@@ -135,6 +135,7 @@ class InvestorPage extends React.Component {
         getInvestorSearch(this.state.name, this.state.market, this.state.country, this.state.selectedState, this.state.city, this.state.is_person, this.state.num_investmentsLow, this.state.num_investmentsHigh, this.state.num_acquisitionsLow, this.state.num_acquisitionsHigh, null, null).then(res => {
             this.setState({ investorsResults: res.results })
         })
+        this.setState({ selectedCompanyID: -1 })
     }
 
     componentDidMount() {

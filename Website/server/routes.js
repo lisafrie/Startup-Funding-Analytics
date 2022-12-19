@@ -115,12 +115,33 @@ async function market_funding_share(req, res) {
     if (year >= 1990 & year <= 2014) {
     connection.query(`
       
-    SELECT market, SUM(amount_USD) AS total_funding
-    FROM Financial_Entity f JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
-    WHERE amount_USD IS NOT NULL AND YEAR(date) = ${year}
-    GROUP BY market
-    ORDER BY total_funding DESC
-    
+WITH cleaned_FE AS (
+    SELECT market, ID
+    FROM Financial_Entity
+), cleaned_Round AS (
+    SELECT company_ID, amount_USD, date
+    FROM (
+        SELECT company_ID, round_number, date, amount_USD
+        FROM Round
+        WHERE amount_USD IS NOT NULL
+        GROUP BY company_ID, round_number, date) a
+)
+
+(SELECT market, SUM(amount_USD) AS total_funding
+FROM cleaned_FE f JOIN cleaned_Round r ON f.ID = r.company_ID
+WHERE amount_USD IS NOT NULL AND YEAR(date) = ${year}
+GROUP BY market
+ORDER BY total_funding DESC LIMIT 20)
+
+UNION
+
+(SELECT "Other" AS market, SUM(amount_USD) AS total_funding
+FROM (SELECT *
+    FROM cleaned_FE f JOIN cleaned_Round r ON f.ID = r.company_ID
+    LIMIT 5000000 OFFSET 20) a
+WHERE amount_USD IS NOT NULL AND YEAR(date) = ${year}
+ORDER BY total_funding)
+
     `, function (error, results, fields) {
 
         if (error) {
@@ -135,12 +156,33 @@ async function market_funding_share(req, res) {
       
     connection.query(`
       
-    SELECT market, SUM(amount_USD) AS total_funding
-    FROM Financial_Entity f JOIN (SELECT DISTINCT company_ID, round_number, date, amount_USD FROM Round) r ON f.ID = r.company_ID
-    WHERE amount_USD IS NOT NULL
-    GROUP BY market
-    ORDER BY total_funding DESC
-    
+WITH cleaned_FE AS (
+    SELECT market, ID
+    FROM Financial_Entity
+), cleaned_Round AS (
+    SELECT company_ID, amount_USD, date
+    FROM (
+        SELECT company_ID, round_number, date, amount_USD
+        FROM Round
+        WHERE amount_USD IS NOT NULL
+        GROUP BY company_ID, round_number, date) a
+)
+
+(SELECT market, SUM(amount_USD) AS total_funding
+FROM cleaned_FE f JOIN cleaned_Round r ON f.ID = r.company_ID
+WHERE amount_USD IS NOT NULL
+GROUP BY market
+ORDER BY total_funding DESC LIMIT 20)
+
+UNION
+
+(SELECT "Other" AS market, SUM(amount_USD) AS total_funding
+FROM (SELECT *
+    FROM cleaned_FE f JOIN cleaned_Round r ON f.ID = r.company_ID
+    LIMIT 5000000 OFFSET 20) a
+WHERE amount_USD IS NOT NULL
+ORDER BY total_funding)
+
     `, function (error, results, fields) {
 
         if (error) {
@@ -356,7 +398,7 @@ Cleaned_FE AS (
     city LIKE "%${city}%"
     )
 SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state,
-       IFNULL(f.city, "") AS city, c.founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
+       IFNULL(f.city, "") AS city, DATE_FORMAT(c.founding_date, '%Y-%m') AS founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
 FROM Cleaned_FE f JOIN Company c ON f.ID = c.company_ID JOIN TotalFunding tf ON f.ID = tf.company_ID
 WHERE total_funding >= ${total_fundingLow} AND total_funding <= ${total_fundingHigh}
 GROUP BY ID, name, market, country, state, city, founding_date, status
@@ -387,7 +429,7 @@ Cleaned_FE AS (
     city LIKE "%${city}%"
     )
 SELECT f.ID, f.name, IFNULL(f.market, "") AS market, IFNULL(f.country, "") AS country, IFNULL(f.state, "") AS state,
-       IFNULL(f.city, "") AS city, c.founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
+       IFNULL(f.city, "") AS city, DATE_FORMAT(c.founding_date, '%Y-%m') AS founding_date, c.status, IFNULL(total_funding, 0) AS total_funding
 FROM Cleaned_FE f JOIN Company c ON f.ID = c.company_ID JOIN TotalFunding tf ON f.ID = tf.company_ID
 WHERE total_funding >= ${total_fundingLow} AND total_funding <= ${total_fundingHigh}
 GROUP BY ID, name, market, country, state, city, founding_date, status
