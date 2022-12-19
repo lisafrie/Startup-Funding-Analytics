@@ -8,7 +8,7 @@ As our application develops, observe and detect market patterns. Our worldwide c
 
 ## Authors
 
-Lisa Friedmann, Joseph Piorier, Rishi Patel, Purvansh Jain
+Lisa Friedmann, Joseph Poirier, Rishi Patel, Purvansh Jain
 
 ## How to use
 
