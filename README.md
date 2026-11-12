@@ -12,7 +12,7 @@ Lisa Friedmann, Joseph Poirier, Rishi Patel, Purvansh Jain
 
 ## How to use
 
-Download the Github repo and install react on your local machine. Install and start npm in both the server and client directories (in this order), which should automatically download all required dependencies, specified in packacge.json. 
+Download the Github repo and install react on your local machine. Install and start npm in both the server and client directories (in this order), which should automatically download all required dependencies, specified in package.json. 
 
 If your setup was successful, the homepage will open at http://localhost:3000 in your browser. 
 
